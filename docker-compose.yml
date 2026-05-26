@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: fuseos-app
+    container_name: fuseos-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+      - redis
+    environment:
+      DB_HOST: db
+      REDIS_HOST: redis
+      OLLAMA_HOST: http://ollama:11434
+      QDRANT_HOST: http://qdrant:6333
+    networks:
+      - fuseos-network
+
+  web:
+    image: nginx:alpine
+    container_name: fuseos-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - fuseos-network
+
+  reverb:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: fuseos-app
+    container_name: fuseos-reverb
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - app
+      - redis
+    environment:
+      DB_HOST: db
+      REDIS_HOST: redis
+      OLLAMA_HOST: http://ollama:11434
+      QDRANT_HOST: http://qdrant:6333
+    networks:
+      - fuseos-network
+
+  queue:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: fuseos-app
+    container_name: fuseos-queue
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan queue:work --verbose --tries=3 --timeout=90
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - app
+      - redis
+    environment:
+      DB_HOST: db
+      REDIS_HOST: redis
+      OLLAMA_HOST: http://ollama:11434
+      QDRANT_HOST: http://qdrant:6333
+    networks:
+      - fuseos-network
+
+  db:
+    image: postgres:16-alpine
+    container_name: fuseos-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-fuseos}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - fuseos-db:/var/lib/postgresql/data
+    networks:
+      - fuseos-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: fuseos-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - fuseos-redis:/data
+    networks:
+      - fuseos-network
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: fuseos-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - fuseos-ollama:/root/.ollama
+    networks:
+      - fuseos-network
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: fuseos-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - fuseos-qdrant:/qdrant/storage
+    networks:
+      - fuseos-network
+
+networks:
+  fuseos-network:
+    driver: bridge
+
+volumes:
+  fuseos-db:
+    driver: local
+  fuseos-redis:
+    driver: local
+  fuseos-ollama:
+    driver: local
+  fuseos-qdrant:
+    driver: local
