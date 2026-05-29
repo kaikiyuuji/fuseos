@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RefreshController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\WorkspaceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +34,9 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
     // AUTH-04 — Perfil do usuário
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // CHAN-01 — Workspaces
+    Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
 
     /*
     |----------------------------------------------------------------------
