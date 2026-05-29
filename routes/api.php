@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RefreshController;
+use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WorkspaceController;
 use Illuminate\Http\Request;
@@ -37,6 +38,14 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
 
     // CHAN-01 — Workspaces
     Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
+
+    // CHAN-02/03 — Canais dentro de um workspace
+    Route::prefix('workspaces/{workspace}')->group(function () {
+        Route::get('/channels', [ChannelController::class, 'index'])->name('channels.index');
+        Route::post('/channels', [ChannelController::class, 'store'])
+            ->middleware('permission:channel.create')
+            ->name('channels.store');
+    });
 
     /*
     |----------------------------------------------------------------------
