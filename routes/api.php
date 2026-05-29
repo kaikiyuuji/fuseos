@@ -26,7 +26,7 @@ Route::prefix('auth')->group(function () {
 | Rotas autenticadas
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/user', fn (Request $request) => $request->user());
 
     // AUTH-04 — Perfil do usuário

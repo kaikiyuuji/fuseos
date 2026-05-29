@@ -27,6 +27,7 @@ class User extends Authenticatable
         'password',
         'avatar',
         'status',
+        'is_active',
     ];
 
     /**
@@ -49,7 +50,16 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * AUTH-06 — Conta habilitada a acessar a plataforma.
+     */
+    public function isActive(): bool
+    {
+        return (bool) $this->is_active;
     }
 
     /**
