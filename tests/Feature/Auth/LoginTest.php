@@ -84,4 +84,23 @@ class LoginTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['email', 'password']);
     }
+
+    /**
+     * AUTH-03/06 — Usuário desativado não consegue autenticar, mesmo com a senha correta.
+     */
+    public function test_inactive_user_cannot_login(): void
+    {
+        User::factory()->inactive()->create([
+            'email' => 'desativado@fuseos.test',
+            'password' => Hash::make('senha-secreta'),
+        ]);
+
+        $response = $this->postJson('/api/auth/login', [
+            'email' => 'desativado@fuseos.test',
+            'password' => 'senha-secreta',
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors('email');
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+    }
 }

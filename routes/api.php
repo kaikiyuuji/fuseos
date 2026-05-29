@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RefreshController;
@@ -32,4 +33,19 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
     // AUTH-04 — Perfil do usuário
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    /*
+    |----------------------------------------------------------------------
+    | Administração (somente TI) — AUTH-02/03, RBAC-03
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('admin')->group(function () {
+        Route::post('/users', [AdminUserController::class, 'store'])
+            ->middleware('permission:user.create')
+            ->name('admin.users.store');
+
+        Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])
+            ->middleware('permission:user.deactivate')
+            ->name('admin.users.destroy');
+    });
 });

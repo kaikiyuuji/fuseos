@@ -27,6 +27,13 @@ class LoginController extends Controller
             ]);
         }
 
+        // AUTH-03/06 — contas desativadas pela TI não autenticam.
+        if (! $user->isActive()) {
+            throw ValidationException::withMessages([
+                'email' => __('auth.failed'),
+            ]);
+        }
+
         $token = $user->createToken('auth')->plainTextToken;
 
         return response()->json([
